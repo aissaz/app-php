@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="../css/fonts-googleapis.css" rel="stylesheet">
+    <link href="../css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="../css/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+
+</head>
+<body style="background-color: black">
+<div id="app">
+    <v-app>
+        <v-main>
+            <v-row>
+                <!-- on boucle sur chage operateur -------------------------------------------------------------->
+                <v-col v-for="operateur in operateurs" :key="operateur.designation_op"
+                       class="d-flex child-flex">
+                    <v-card elevation="24"
+                            max-width="444"
+                            class="mx-auto">
+                        <v-system-bar lights-out></v-system-bar>
+                        <!-- on affiche un carousel qui vas contenir les offre d'un operateur -------------------------------------------------------------------------------->
+                        <v-carousel
+                                :continuous="operateur.offres.length > 0"
+                                :cycle="operateur.offres.length > 0"
+                                :show-arrows="operateur.offres.length > 0"
+                                height="300"
+                        >
+                            <v-carousel-item
+                                    v-if="operateur.offres.length > 0"
+                                    v-for="(offre, i) in operateur.offres"
+                                    :key="i">
+                                <v-sheet color="indigo"
+                                         height="100%"
+                                         tile>
+                                    <div class="fill-height"
+                                         align="center"
+                                         justify="center">
+                                        <!-- on affiche les info d'une offre -------------------------------------------------------------------------------->
+                                        <p class="text-h2">
+                                            {{ offre.designation_offre }}
+                                        </p>
+                                        <p>
+                                            Appels : {{ offre.appels_op}}<br/>
+                                            SMS : {{ offre.sms_op}}<br/>
+                                            Internet : {{ offre.internet}}<br/>
+                                        </p>
+                                        <p>
+                                            Appel autre : {{ offre.appels_autre_op}}<br/>
+                                            SMS autre : {{ offre.sms_autre_op}}<br/>
+                                        </p>
+                                        <p>
+                                            Prix : {{ offre.prix}}<br/>
+                                        </p>
+                                    </div>
+                                </v-sheet>
+                            </v-carousel-item>
+                            <v-carousel-item
+                                    v-if="operateur.offres.length == 0"
+                            >
+                                <v-sheet
+                                        color="grey"
+                                        height="100%"
+                                        tile
+                                >
+                                    <v-row
+                                            class="fill-height mx-4"
+                                            align="center"
+                                            justify="center"
+                                    >
+                                        <div class="text-h2">
+                                            Pas d'offre pour le moment
+                                        </div>
+                                    </v-row>
+                                </v-sheet>
+                            </v-carousel-item>
+                        </v-carousel>
+                        <!-- on affiche les info de l'operateur -------------------------------------------------------------------------------->
+                        <v-list two-line>
+                            <v-list-item>
+                                <v-list-item-content>
+                                    {{operateur.designation_op}}
+
+                                </v-list-item-content>
+                                <v-list-item-action>
+                                    Addresse: {{operateur.adresse}}</br>
+                                    Pays : {{operateur.pays}}</br>
+                                    Email : {{operateur.mail}}</br>
+                                    Telephone : {{operateur.num}}</br>
+                                    Facebook : {{operateur.fb}}</br>
+                                    Linkedin : {{operateur.linkedin}}</br>
+                                </v-list-item-action>
+                            </v-list-item>
+                        </v-list>
+                    </v-card>
+                </v-col>
+            </v-row>
+        </v-main>
+    </v-app>
+</div>
+
+<script src="../js/vue.js"></script>
+<script src="../js/vuetify.js"></script>
+<script src="../js/axios.min.js"></script>
+
+<script>
+    var app = new Vue({
+        el: '#app',
+        vuetify: new Vuetify({theme: {dark: true},}),
+        data: {
+            operateurs: []
+
+        },
+        computed: {},
+        mounted: function () {
+            // au demarage de la page on charge les operateurs et offre
+            this.loadOperateurAndOffre()
+        },
+        methods: {
+            // chargement  de toute les offre et operateurs
+            loadOperateurAndOffre() {
+                axios.get('../api/operateur')
+                    .then(function (response) {
+                        // une fois que les operateur sont charger on charge les offre
+                        axios.get('../api/offre')
+                            .then(offre => {
+                                //une fois que les offres sont charger
+                                // on group les offre par operateurs
+                                response.data.forEach(operateur => {
+                                    operateur.offres = []
+                                    offre.data
+                                        .filter(value => value.designation_op === operateur.designation_op)
+                                        .forEach(value => operateur.offres.push(value))
+                                });
+                                app.operateurs = response.data;
+                            })
+                            .catch(reason => {
+                                console.log(reason);
+                            });
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+        },
+    })
+</script>
+</body>
+</html>
